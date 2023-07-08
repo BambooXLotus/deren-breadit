@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Button } from "./ui/Button";
 import { Icons } from "./Icons";
+import { toast } from "@/hooks/use-toast";
 
 type UserAuthFormProps = {
   id?: string;
@@ -17,27 +18,43 @@ export const UserAuthForm: React.FC<UserAuthFormProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  async function loginWithGoogle() {
+  async function login(provider: "google" | "discord") {
     setIsLoading(true);
     try {
-      await signIn("google");
+      await signIn(provider);
     } catch (error) {
-      //toast
+      toast({
+        title: "There was an ERROR",
+        description: "Something error logging in with Google",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className={cn("flex justify-center", className)} {...props}>
+    <div
+      className={cn("flex flex-col justify-center gap-2", className)}
+      {...props}
+    >
       <Button
         size="sm"
         className="w-full"
         isLoading={isLoading}
-        onClick={loginWithGoogle}
+        onClick={() => login("google")}
       >
         {isLoading ? null : <Icons.google className="h-w mr-2 w-4" />}
         Google
+      </Button>
+      <Button
+        size="sm"
+        className="w-full"
+        isLoading={isLoading}
+        onClick={() => login("discord")}
+      >
+        {isLoading ? null : <Icons.discord className="h-w mr-2 w-4" />}
+        Discord
       </Button>
     </div>
   );
