@@ -1,10 +1,10 @@
-import { SignIn } from "@/components/SignIn";
+import { SignUp } from "@/components/SignUp";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
 
-export default async function SignInPage() {
+export default async function SignUpPage() {
   return (
     <div className="absolute inset-0">
       <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center gap-20">
@@ -19,7 +19,7 @@ export default async function SignInPage() {
           Home
         </Link>
         {/* <SignIn /> */}
-        <SignIn />
+        <SignUp />
       </div>
     </div>
   );

@@ -14,8 +14,10 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
+  authModal,
 }: {
   children: React.ReactNode;
+  authModal: React.ReactNode;
 }) {
   return (
     <html
@@ -23,8 +25,10 @@ export default function RootLayout({
       className={cn("bg-white text-slate-900 antialiased", inter.className)}
     >
       <body className="min-h-screen bg-slate-50 pt-12 antialiased">
+        {/* @ts-expect-error server component */}
+        <Navbar />
+        {authModal}
         <div className="container mx-auto h-full max-w-7xl pt-12">
-          <Navbar />
           {children}
         </div>
         <Toaster />
