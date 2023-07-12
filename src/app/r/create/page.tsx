@@ -53,7 +53,7 @@ export default function SubRedditCreatePage() {
 
       toast({
         title: "There was an ERROR!",
-        description: "Could not create subreddit!",
+        description: "SOMETHING WONG!!!",
         variant: "destructive",
       });
     },
