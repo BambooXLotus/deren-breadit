@@ -1,13 +1,18 @@
 "use client";
 
+import { uploadFiles } from "@/lib/uploadthing";
 import { PostCreationRequest, PostValidator } from "@/lib/validators/post";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import TextareaAutosize from "react-textarea-autosize";
 
 import type EditorJS from "@editorjs/editorjs";
-
+import { object } from "zod";
+import { toast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { usePathname, useRouter } from "next/navigation";
 type EditorProps = {
   subredditId: string;
 };
@@ -26,7 +31,11 @@ export const Editor: React.FC<EditorProps> = ({ subredditId }) => {
     },
   });
 
+  const _titleRef = useRef<HTMLTextAreaElement>(null);
   const ref = useRef<EditorJS>();
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const initEditor = useCallback(async () => {
     const EditorJS = (await import("@editorjs/editorjs")).default;
@@ -58,25 +67,143 @@ export const Editor: React.FC<EditorProps> = ({ subredditId }) => {
               endpoint: "/api/link",
             },
           },
+          image: {
+            class: ImageTool,
+            config: {
+              uploader: {
+                async uploadByFile(file: File) {
+                  const [res] = await uploadFiles([file], "imageUploader");
+
+                  return {
+                    success: 1,
+                    file: {
+                      url: res.fileUrl,
+                    },
+                  };
+                },
+              },
+            },
+          },
+          list: List,
+          code: Code,
+          inlineCode: InlineCode,
+          table: Table,
+          embed: Embed,
         },
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMounted(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(errors).length) {
+      for (const [_key, value] of Object.entries(errors)) {
+        toast({
+          title: "SOMETHING WONG!",
+          description: (value as { message: string }).message,
+          variant: "destructive",
+        });
+      }
+    }
+  }, [errors]);
+
+  useEffect(() => {
+    const init = async () => {
+      await initEditor();
+
+      setTimeout(() => {
+        _titleRef.current?.focus();
+      });
+    };
+
+    if (isMounted) {
+      init();
+
+      return () => {
+        ref.current?.destroy();
+        ref.current = undefined;
+      };
+    }
+  }, [isMounted, initEditor]);
+
+  const { mutate: createPost } = useMutation({
+    mutationFn: async ({
+      title,
+      content,
+      subredditId,
+    }: PostCreationRequest) => {
+      const payload: PostCreationRequest = {
+        title,
+        content,
+        subredditId,
+      };
+
+      const { data } = await axios.post("/api/subreddit/post/create", payload);
+      return data;
+    },
+    onSuccess: () => {
+      // turn pathname /r/mycommunity/submit into /r/mycommunity
+      const newPathname = pathname.split("/").slice(0, -1).join("/");
+      router.push(newPathname);
+
+      router.refresh();
+
+      return toast({
+        description: "Your post has been published.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong.",
+        description: "Your post was not published. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  async function onSubmit(data: PostCreationRequest) {
+    const blocks = await ref.current?.save();
+
+    const payload: PostCreationRequest = {
+      title: data.title,
+      content: blocks,
+      subredditId,
+    };
+
+    createPost(payload);
+  }
+
+  if (!isMounted) {
+    return null;
+  }
+
+  const { ref: titleRef, ...rest } = register("title");
 
   return (
     <div className="w-full p-4 bg-zinc-50 rounded-lg border border-zinc-200">
       <form
         id="subreddit-post-form"
         className="w-fit"
-        onSubmit={() => {
-          console.log("donkey");
-        }}
+        onSubmit={handleSubmit(onSubmit)}
       >
         <div className="prose prose-stone dark:prose-invert">
           <TextareaAutosize
+            ref={(e) => {
+              titleRef(e);
+              // @ts-ignore
+              _titleRef.current = e;
+            }}
+            {...rest}
             placeholder="Title"
             className="w-full resize-none appearance-none overflow-hidden bg-transparent text-5xl font-bold focus:outline-none"
           />
+
+          <div id="editor" className="min-h-[500px]" />
         </div>
       </form>
     </div>
