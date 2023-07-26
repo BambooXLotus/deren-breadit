@@ -77,7 +77,7 @@ model Subscription {
 
 model Post {
   id          String    @id @default(cuid())
-  title       String?
+  title       String
   content     Json?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
