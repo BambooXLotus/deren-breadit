@@ -52,7 +52,7 @@ export const PostFeed: React.FC<PostFeedProps> = ({
   return (
     <ul className="flex flex-col col-span-2 space-y-6">
       {posts.map((post, idx) => {
-        const votesAmt = post.votes.reduce((acc, vote) => {
+        const votesCnt = post.votes.reduce((acc, vote) => {
           if (vote.type === "UP") return acc + 1;
           if (vote.type === "DOWN") return acc - 1;
 
@@ -70,19 +70,23 @@ export const PostFeed: React.FC<PostFeedProps> = ({
                 subredditName={post.subreddit.name}
                 post={post}
                 commentCnt={post.comments.length}
+                currentVote={currentVote}
+                votesCnt={votesCnt}
               />
             </li>
           );
+        } else {
+          return (
+            <Post
+              key={post.id}
+              subredditName={post.subreddit.name}
+              post={post}
+              commentCnt={post.comments.length}
+              currentVote={currentVote}
+              votesCnt={votesCnt}
+            />
+          );
         }
-
-        return (
-          <Post
-            key={post.id}
-            subredditName={post.subreddit.name}
-            post={post}
-            commentCnt={post.comments.length}
-          />
-        );
       })}
     </ul>
   );
