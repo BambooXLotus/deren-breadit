@@ -10,7 +10,6 @@ const CACHE_AFTER_UPVOTES = 1
 export async function PATCH(req: Request) {
   try {
     const session = await getAuthSession()
-
     if (!session?.user) {
       return new Response('UNAUTHORIZED', { status: 401 })
     }
