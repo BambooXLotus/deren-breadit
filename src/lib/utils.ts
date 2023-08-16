@@ -1,3 +1,4 @@
+import { Vote, VoteType } from '@prisma/client';
 import { ClassValue, clsx } from 'clsx';
 import { formatDistanceToNowStrict } from 'date-fns';
 import locale from 'date-fns/locale/en-US';
@@ -54,3 +55,17 @@ export function formatTimeToNow(date: Date): string {
     },
   })
 }
+
+declare global {
+  interface Array<T> {
+    voteCount(this: Array<GetResult<VoteType>>): number;
+  }
+}
+
+Array.prototype.voteCount = function (this: GetResult<VoteType>[]): number {
+  return this.reduce((acc, vote) => {
+    if (vote.type === "UP") return acc + 1;
+    if (vote.type === "DOWN") return acc - 1;
+    return acc;
+  }, 0);
+};
