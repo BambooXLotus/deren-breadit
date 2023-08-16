@@ -8,6 +8,7 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import Post from "./Post";
+import { Loader2 } from "lucide-react";
 
 type PostFeedProps = {
   initialPosts: ExtendedPost[];
@@ -29,8 +30,9 @@ export const PostFeed: React.FC<PostFeedProps> = ({
   const { data, fetchNextPage, isFetchingNextPage } = useInfiniteQuery(
     ["infinite-query"],
     async ({ pageParam = 1 }) => {
-      const query = `/api/posts?limit=${INFINITE_SCROLLING_PAGINATION_RESULTS}&page=${pageParam}`;
-      !!subredditName ? `&subredditName=${subredditName}` : "";
+      const query =
+        `/api/posts?limit=${INFINITE_SCROLLING_PAGINATION_RESULTS}&page=${pageParam}` +
+        (!!subredditName ? `&subredditName=${subredditName}` : "");
 
       const { data } = await axios.get(query);
 
@@ -94,6 +96,12 @@ export const PostFeed: React.FC<PostFeedProps> = ({
           );
         }
       })}
+
+      {isFetchingNextPage && (
+        <li className="flex justify-center">
+          <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+        </li>
+      )}
     </ul>
   );
 };
