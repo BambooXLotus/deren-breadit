@@ -36,7 +36,15 @@ export const CommentsSection = async ({ postId }: CommentsSectionProps) => {
         {comments
           .filter((comment) => !comment.replyToId)
           .map((topLevelComment) => {
-            const topLevelCommentVotesCnt = topLevelComment.votes.voteCount();
+            const topLevelCommentVotesCnt = topLevelComment.votes.reduce(
+              (acc, vote) => {
+                if (vote.type === "UP") return acc + 1;
+                if (vote.type === "DOWN") return acc - 1;
+                return acc;
+              },
+              0
+            );
+
             const topLevelCommentVote = topLevelComment.votes.find(
               (vote) => vote.userId === session?.user?.id
             );
@@ -55,7 +63,12 @@ export const CommentsSection = async ({ postId }: CommentsSectionProps) => {
                 {topLevelComment.replies
                   .sort((a, b) => b.votes.length - a.votes.length)
                   .map((reply) => {
-                    const replyVoteCnt = reply.votes.voteCount();
+                    const replyVoteCnt = reply.votes.reduce((acc, vote) => {
+                      if (vote.type === "UP") return acc + 1;
+                      if (vote.type === "DOWN") return acc - 1;
+                      return acc;
+                    }, 0);
+
                     const replyVote = reply.votes.find(
                       (vote) => vote.userId === session?.user?.id
                     );

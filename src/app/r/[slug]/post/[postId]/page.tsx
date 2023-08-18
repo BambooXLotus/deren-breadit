@@ -1,7 +1,7 @@
 import { CommentsSection } from "@/components/CommentsSection";
 import { EditorOutput } from "@/components/EditorOutput";
-import { PostVoteShell } from "@/components/PostVoteShell";
 import { PostVoteServer } from "@/components/post-vote/PostVoteServer";
+import { PostVoteShell } from "@/components/PostVoteShell";
 import { db } from "@/lib/db";
 import { redis } from "@/lib/redis";
 import { formatTimeToNow } from "@/lib/utils";
@@ -11,24 +11,21 @@ import { Loader2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-type PageProps = {
+type SubRedditPostPageProps = {
   params: {
     postId: string;
   };
 };
 
-export const dynaimc = "force-dynamic";
+export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-const Page = async ({ params: { postId } }: PageProps) => {
-  const cachedPost = (await redis.hgetall(`post${postId}`)) as CachedPost;
+const SubRedditPostPage = async ({
+  params: { postId },
+}: SubRedditPostPageProps) => {
+  const cachedPost = (await redis.hgetall(`post:${postId}`)) as CachedPost;
 
-  let post:
-    | (Post & {
-        votes: Vote[];
-        author: User;
-      })
-    | null = null;
+  let post: (Post & { votes: Vote[]; author: User }) | null = null;
 
   if (!cachedPost) {
     post = await db.post.findFirst({
@@ -46,7 +43,7 @@ const Page = async ({ params: { postId } }: PageProps) => {
 
   return (
     <div>
-      <div className="h-full flex flex-col sm:flex-row items-center sm:items-start justify-between ">
+      <div className="h-full flex flex-col sm:flex-row items-center sm:items-start justify-between">
         <Suspense fallback={<PostVoteShell />}>
           {/* @ts-expect-error server component */}
           <PostVoteServer
@@ -74,13 +71,12 @@ const Page = async ({ params: { postId } }: PageProps) => {
           </h1>
 
           <EditorOutput content={post?.content ?? cachedPost.content} />
-
           <Suspense
             fallback={
               <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
             }
           >
-            {/* @ts-expect-error server component */}
+            {/* @ts-expect-error Server Component */}
             <CommentsSection postId={post?.id ?? cachedPost.id} />
           </Suspense>
         </div>
@@ -89,4 +85,4 @@ const Page = async ({ params: { postId } }: PageProps) => {
   );
 };
 
-export default Page;
+export default SubRedditPostPage;
